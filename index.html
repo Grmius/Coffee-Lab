@@ -58,8 +58,14 @@ let audioContext;
 async function unlockAudio(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){toast("This browser does not support audio");return null}if(!audioContext||audioContext.state==="closed")audioContext=new AC();if(audioContext.state!=="running"){try{await audioContext.resume()}catch(ex){record(ex,"audio");toast("Audio blocked by browser")}}return audioContext.state==="running"?audioContext:null}
 function tone(c,hz,duration=.12,kind="sine",gain=.18,delay=0){if(!c)return;const t=c.currentTime+delay,osc=c.createOscillator(),amp=c.createGain();osc.type=kind;osc.frequency.setValueAtTime(hz,t);amp.gain.setValueAtTime(.0001,t);amp.gain.exponentialRampToValueAtTime(Math.max(.001,gain*Number(alerts.volume)/100),t+.015);amp.gain.exponentialRampToValueAtTime(.0001,t+duration);osc.connect(amp).connect(c.destination);osc.start(t);osc.stop(t+duration+.03)}
 function soundTick(){if(alerts.tickSound==="none"||!audioContext||audioContext.state!=="running")return;tone(audioContext,alerts.tickSound==="beeps"?870:520,.095,alerts.tickSound==="beeps"?"sine":"triangle",.23)}
-const lionAudio=new Audio("lion-roar.mp3");lionAudio.preload="auto";
-function playRecordedRoar(){lionAudio.pause();lionAudio.currentTime=0;lionAudio.volume=Math.min(1,Number(alerts.volume)/100);lionAudio.play().catch(err=>{record(err,"lion-audio");toast("Lion recording unavailable: check your connection")})}
+let lionAudio=null;
+function playRecordedRoar(){
+ try {
+  if(lionAudio){lionAudio.pause();lionAudio.removeAttribute("src");lionAudio.load()}
+  lionAudio=new Audio("./lion-roar.mp3?v=2");lionAudio.preload="auto";lionAudio.volume=Math.min(1,Number(alerts.volume)/100);
+  lionAudio.play().catch(err=>{record(err,"lion-audio");toast("Roar playback failed: "+(err?.name||"unknown error"))});
+ }catch(err){record(err,"lion-audio");toast("Roar playback failed: "+(err?.message||"unknown error"))}
+}
 function soundStage(){const c=audioContext;if(!c||c.state!=="running")return;switch(alerts.stageSound){case "none":break;case "gong":tone(c,190,.9,"sine",.36);tone(c,285,.7,"sine",.14,.09);break;case "horn":tone(c,220,.48,"sawtooth",.18);tone(c,330,.48,"sawtooth",.1);break;case "bell":tone(c,660,.7,"sine",.28);tone(c,880,.5,"sine",.09);break;case "roar":{playRecordedRoar();break}}}
 on("previewRoar","click",async()=>{const c=await unlockAudio();if(!c)return;const sound=$("stageSound").value;alerts.stageSound=sound;save("alerts",alerts);soundStage();toast("Playing: "+$("stageSound").selectedOptions[0].text)});
 const parseTime=s=>{const v=String(s).trim().split(":").map(Number);return v.length===2&&v.every(Number.isFinite)?v[0]*60+v[1]:null},fmt=n=>Math.floor(n/60)+":"+String(n%60).padStart(2,"0");
