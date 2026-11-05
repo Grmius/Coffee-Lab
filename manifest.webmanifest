@@ -1,0 +1,19 @@
+{
+  "name": "Coffee Lab — Lions Edition",
+  "short_name": "Coffee Lab",
+  "description": "Personal coffee brewing journal and timer",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#edf2f6",
+  "theme_color": "#0076b6",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
